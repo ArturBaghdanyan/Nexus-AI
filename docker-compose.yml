@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  backend:
+    build: ./server
+    ports:
+      - "3001:3001"
+    environment:
+      - REDIS_HOST=redis
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

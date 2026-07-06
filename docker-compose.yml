@@ -1,12 +1,14 @@
-version: '3.8'
+version: "3.8"
 services:
   backend:
     build: ./server
     ports:
-      - "3001:3001"
+      - "3000:3000"
+    env_file:
+      - ./server/.env
     environment:
       - REDIS_HOST=redis
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
       - redis
 

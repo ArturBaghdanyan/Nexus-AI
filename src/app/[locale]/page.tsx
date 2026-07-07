@@ -11,7 +11,8 @@ export default function LocalePage() {
   const [result, setResult] = useState("");
   const [language] = useState("English");
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     try {
       const response = await axios.post(
         "/api/generate",
@@ -37,7 +38,7 @@ export default function LocalePage() {
         url={url}
         language={language}
         setUrl={setUrl}
-        handleAnalyze={handleAnalyze}
+        handleAnalyze={(e) => handleAnalyze(e)}
       />
       <ReviewResult result={result} />
     </div>

@@ -1,30 +1,33 @@
 # Nexus AI
 
-Nexus AI is a full-stack application that helps users review code with the power of AI. Users can paste a GitHub repository link or directly submit code snippets, and the platform analyzes them to identify potential issues, bugs, performance problems, and code quality concerns.
+Nexus AI is a powerful Full-Stack AI-powered code analysis tool. It enables developers to perform instant, intelligent code reviews by providing insights into potential bugs, performance bottlenecks, and code quality concerns. Simply paste a GitHub repository link, and the system will analyze your project to provide actionable feedback.
 
-The system is designed to make code review faster and easier by giving developers clear insights about what needs attention in their project or source code.
 
-## Project structure
+## Key Features
+- AI-Powered Analysis: Leverages LLM technology (via Groq/OpenAI) to provide deep code insights.
+- GitHub Integration: Built-in Octokit integration to analyze repository structures and contents directly from GitHub.
+- Full-Stack Architecture: Built entirely with Next.js, utilizing Serverless API Routes for secure backend logic.
+- Multilingual Support: Seamlessly handles internationalization using next-intl.
+- Professional Reporting: Includes code quality scoring (Security, Performance, Clean Code) and export capabilities.
 
-- client: Next.js frontend with internationalization support
-- server: NestJS backend API for AI generation
-- docker-compose.yml: container setup for the project
+## Tech Stack
+- Framework: Next.js (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS
+- API Integration: Octokit (GitHub SDK)
+- AI Engine: Groq LLM API
+- Internationalization: next-intl
 
 ## Requirements
 
 - Node.js 20+
 - npm or pnpm
-- Docker (optional, for containerized setup)
 
 ## Setup
 
 ### 1. Install dependencies
 
 ```bash
-cd client
-npm install
-
-cd ../server
 npm install
 ```
 
@@ -32,53 +35,23 @@ npm install
 
 Create a `.env.local` file in the client app if needed for your AI or app configuration.
 
-Create a `.env` file in the server app if needed for your backend configuration.
+## Code Snippet
+GITHUB_TOKEN=your_github_personal_access_token
+GROQ_API_KEY=your_groq_api_key
 
 ### 3. Run locally
 
-Start the client:
-
 ```bash
-cd client
 npm run dev
 ```
 
-Start the server:
 
-```bash
-cd server
-npm run start:dev
-```
-
-### 4. Run with Docker
-
-```bash
-docker compose up --build
-```
-
-## Available scripts
-
-### Client
-
-```bash
-cd client
-npm run dev
-npm run build
-npm run start
-npm run lint
-```
-
-### Server
-
-```bash
-cd server
-npm run start
-npm run start:dev
-npm run build
-npm run test
-```
+## Project Structure
+- /app: Next.js App Router (pages and layouts)
+- /app/api: Serverless API routes for AI and GitHub integration
+- /components: Reusable UI components (Analysis, Result, Header)
+- /messages: Translation files for i18n support
 
 ## Notes
-
-- The client uses Next.js App Router and next-intl for multilingual routing.
-- The server exposes the AI generation API used by the client.
+- This project is built as a unified Next.js application, ensuring optimal performance and simplified deployment on Vercel or similar platforms. 
+- All backend logic is securely contained within Next.js API routes, keeping your API keys protected.

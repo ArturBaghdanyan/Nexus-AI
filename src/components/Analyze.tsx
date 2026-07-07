@@ -6,7 +6,7 @@ interface AnalyzeProps {
   url: string;
   language: string;
   setUrl: (url: string) => void;
-  handleAnalyze: () => void;
+  handleAnalyze: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export const Analyze = ({
@@ -34,7 +34,7 @@ export const Analyze = ({
           className="flex-1 px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
-          onClick={handleAnalyze}
+          onClick={(e) => handleAnalyze(e)}
           className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
         >
           {t("button")}

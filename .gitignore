@@ -1,13 +1,11 @@
 .env
 .env.*
-!.env.example
+.env.local
 
 node_modules/
-client/node_modules/
-server/node_modules/
 
-client/AGENTS.md
-client/CLAUDE.md
+AGENTS.md
+CLAUDE.md
 
 .next/
 dist/

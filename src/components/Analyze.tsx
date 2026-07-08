@@ -35,7 +35,7 @@ export const Analyze = ({
         />
         <button
           onClick={(e) => handleAnalyze(e)}
-          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition cursor-pointer"
         >
           {t("button")}
         </button>

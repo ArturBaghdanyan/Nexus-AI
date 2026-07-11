@@ -1,22 +1,12 @@
 "use client";
 
 import React from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import CopyButton from "./CopyButton";
 import PdfConvert from "./PdfConvert";
 import { jsPDF } from "jspdf";
-import { FiThumbsUp } from "react-icons/fi";
-
-const CopyModal = () => {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-50">
-      <div className="flex flex-col items-center gap-2 bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-xl">
-        <FiThumbsUp className="text-3xl text-green-500" />
-        <span className="text-zinc-900 dark:text-white">Copied text</span>
-      </div>
-    </div>
-  );
-};
+import { markdownComponents } from "./CodeBlock";
+import { CopyModal } from "./CopyModal";
 
 const ReviewResult = ({ result }: { result: string }) => {
   const [isOpen, setIsOpen] = React.useState(true);
@@ -26,7 +16,6 @@ const ReviewResult = ({ result }: { result: string }) => {
 
   const handleClose = () => {
     setIsOpen(false);
-    location.pathname = "/";
   };
 
   const copyToClipboard = () => {
@@ -57,7 +46,7 @@ const ReviewResult = ({ result }: { result: string }) => {
         Review Result
       </h2>
       <div className="prose dark:prose-invert max-w-none text-zinc-700 dark:text-zinc-300">
-        <ReactMarkdown>{result}</ReactMarkdown>
+        <ReactMarkdown components={markdownComponents as Components}>{result}</ReactMarkdown>
       </div>
       <div className="flex gap-3 items-center">
         <CopyButton onClick={copyToClipboard} />

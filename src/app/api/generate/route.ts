@@ -1,47 +1,66 @@
+import { groq } from "@/src/hooks/useGroq";
 import { Octokit } from "octokit";
-import { OpenAI } from "openai";
 
 export async function POST(req: Request) {
   try {
-    const { prompt, language } = await req.json();
+    const { mode, prompt, language } = await req.json();
 
-    if (!prompt.includes("github.com")) {
-      return Response.json({ error: "Invalid GitHub URL" }, { status: 400 });
+    if (!prompt || !prompt.trim()) {
+      return Response.json({ error: "No input provided" }, { status: 400 });
     }
 
-    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+    let systemPrompt: string;
+    let userContent: string;
 
-    const urlParts = prompt.replace(/\/$/, "").split("/");
-    const repoIndex = urlParts.indexOf("github.com");
-    const owner = urlParts[repoIndex + 1];
-    const repo = urlParts[repoIndex + 2];
+    if (mode === "url") {
+      if (!prompt.includes("github.com")) {
+        return Response.json({ error: "Invalid GitHub URL" }, { status: 400 });
+      }
 
-    console.log(`Fetching: ${owner}/${repo}`);
+      const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-    const { data: contents } = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: "",
-    });
+      const urlParts = prompt.replace(/\/$/, "").split("/");
+      const repoIndex = urlParts.indexOf("github.com");
+      const owner = urlParts[repoIndex + 1];
+      const repo = urlParts[repoIndex + 2];
 
-    const fileNames = (Array.isArray(contents) ? contents : [contents])
-      .map((file) => file.name)
-      .join(", ");
+      if (!owner || !repo) {
+        return Response.json({ error: "Invalid GitHub URL" }, { status: 400 });
+      }
 
-    const systemPrompt = `Analyze the repository structure of ${repo}: ${fileNames}.
-                          Provide a 0-10 score for Security, Performance, and Clean Code.
-                          Respond in ${language}.`;
+      console.log(`Fetching: ${owner}/${repo}`);
 
-    const groq = new OpenAI({
-      apiKey: process.env.GROQ_API_KEY,
-      baseURL: "https://api.groq.com/openai/v1",
-    });
+      const { data: contents } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: "", 
+      });
+
+      if (!contents) throw new Error("Repository content not found");
+
+      const fileNames = (Array.isArray(contents) ? contents : [contents])
+        .map((file) => file.name)
+        .join(", ");
+
+      systemPrompt = `Analyze the repository structure of ${repo}: ${fileNames}.
+                       Provide a 0-10 score for Security, Performance, and Clean Code.
+                       Respond in ${language}.`;
+      userContent = `Review this repository: ${prompt}`;
+    } else if (mode === "code") {
+      systemPrompt = `You are a senior software engineer reviewing a code snippet.
+                       Analyze it for correctness, security, performance, and code quality.
+                       Provide a 0-10 score for Security, Performance, and Clean Code.
+                       Respond in ${language}.`;
+      userContent = `Review this code:\n\n${prompt}`;
+    } else {
+      return Response.json({ error: "Invalid mode" }, { status: 400 });
+    }
 
     const response = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Review this repository: ${prompt}` },
+        { role: "user", content: userContent },
       ],
     });
 
@@ -52,7 +71,8 @@ export async function POST(req: Request) {
     console.error("Error:", error);
     return Response.json(
       {
-        error: "Failed to analyze repository. Check your GitHub link or Token.",
+        error:
+          "Failed to analyze input. Check your GitHub link, Token, or code.",
       },
       { status: 500 },
     );

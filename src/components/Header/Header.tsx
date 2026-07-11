@@ -76,7 +76,7 @@ const Header = () => {
   };
 
   return (
-    <div>
+    <>
       <header className="bg-white dark:bg-black shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -109,7 +109,7 @@ const Header = () => {
           </div>
         </div>
       </header>
-    </div>
+    </>
   );
 };
 

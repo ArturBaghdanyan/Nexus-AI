@@ -2,6 +2,10 @@
   "Home": {
     "title": "Review Your Code with AI",
     "description": "Enter your GitHub repository link and get a deep analysis of bugs, performance, and clean code principles.",
-    "button": "Analyze"
+    "button": "Analyze",
+    "modeUrl": "GitHub URL",
+    "modeCode": "Paste Code",
+    "codePlaceholder": "Paste your code here...",
+    "loading": "Analyzing..."
   }
 }

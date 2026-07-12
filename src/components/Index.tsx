@@ -4,14 +4,9 @@ import { Analyze } from "./Analyze/Analyze";
 import ReviewResult from "./Result/ReviewResult";
 import { useEffect, useState } from "react";
 import { analyzeRepository } from "../api/analyze";
-import { supabase } from "../lib/supabase";
 import { fetchHistory } from "../hooks/useFetch";
+import { HistoryItem } from "../types/historyType";
 
-type HistoryItem = {
-  name: string;
-  url: string;
-  createdAt: number;
-};
 const Index = () => {
   const [url, setUrl] = useState("");
   const [code, setCode] = useState("");
@@ -19,35 +14,48 @@ const Index = () => {
   const [mode, setMode] = useState<"url" | "code">("url");
   const [language] = useState("English");
   const [list, setList] = useState<HistoryItem[]>([]);
-
-  const loadHistory = async () => {
-    const data = await fetchHistory();
-    console.log("Fetched history:", data);
-    setList(data);
-  };
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const initHistory = async () => {
-      const data = await fetchHistory();
-      setList(data);
+    const loadHistory = async () => {
+      try {
+        const data = await fetchHistory();
+        setList(data);
+      } catch (err) {
+        console.error("Failed to fetch history:", err);
+      }
     };
-
-    initHistory();
+    loadHistory();
   }, []);
 
   const handleAnalyze = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const { error } = await supabase
-      .from("history")
-      .insert([{ name: url.split("/").pop() || url, url: url }]);
+    if (analyzing) return;
 
-    if (error) console.error("Error inserting:", error);
-    else loadHistory();
-
-    analyzeRepository(mode, mode === "url" ? url : code, language)
-      .then((res) => setResult(res))
-      .catch((err) => console.error("Error:", err));
+    setAnalyzing(true);
+    setError("");
+    try {
+      const res = await analyzeRepository(
+        mode,
+        mode === "url" ? url : code,
+        language,
+      );
+      setResult(res);
+      const data = await fetchHistory();
+      setList(data);
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.details ||
+        err?.response?.data?.error ||
+        "Something went wrong while analyzing. Please try again.";
+      setError(message);
+      console.error("Error analyzing:", err);
+    } finally {
+      setAnalyzing(false);
+    }
   };
+
   return (
     <>
       <HistoryAnalyze data={list} />
@@ -55,12 +63,17 @@ const Index = () => {
         url={url}
         language={language}
         setUrl={setUrl}
-        handleAnalyze={(e) => handleAnalyze(e)}
+        handleAnalyze={handleAnalyze}
         code={code}
         setCode={setCode}
         mode={mode}
         setMode={setMode}
       />
+      {error && (
+        <p style={{ color: "#f87171", textAlign: "center", margin: "12px 0" }}>
+          {error}
+        </p>
+      )}
       <ReviewResult result={result} />
     </>
   );

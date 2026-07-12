@@ -1,12 +1,23 @@
-import { groq } from "@/src/hooks/useGroq";
+import { createClient } from "../../../lib/supabase/server";
+import { NextResponse } from "next/server";
 import { Octokit } from "octokit";
+import { runReview } from "../../../hooks/ai";
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { mode, prompt, language } = await req.json();
 
     if (!prompt || !prompt.trim()) {
-      return Response.json({ error: "No input provided" }, { status: 400 });
+      return NextResponse.json({ error: "No input provided" }, { status: 400 });
     }
 
     let systemPrompt: string;
@@ -14,7 +25,10 @@ export async function POST(req: Request) {
 
     if (mode === "url") {
       if (!prompt.includes("github.com")) {
-        return Response.json({ error: "Invalid GitHub URL" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid GitHub URL" },
+          { status: 400 },
+        );
       }
 
       const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
@@ -25,15 +39,16 @@ export async function POST(req: Request) {
       const repo = urlParts[repoIndex + 2];
 
       if (!owner || !repo) {
-        return Response.json({ error: "Invalid GitHub URL" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid GitHub URL" },
+          { status: 400 },
+        );
       }
-
-      console.log(`Fetching: ${owner}/${repo}`);
 
       const { data: contents } = await octokit.rest.repos.getContent({
         owner,
         repo,
-        path: "", 
+        path: "",
       });
 
       if (!contents) throw new Error("Repository content not found");
@@ -53,26 +68,36 @@ export async function POST(req: Request) {
                        Respond in ${language}.`;
       userContent = `Review this code:\n\n${prompt}`;
     } else {
-      return Response.json({ error: "Invalid mode" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
     }
 
-    const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
-      ],
-    });
+    const { result, provider } = await runReview(systemPrompt, userContent);
 
-    return Response.json({
-      result: response.choices[0].message.content,
-    });
-  } catch (error: unknown) {
-    console.error("Error:", error);
-    return Response.json(
+    const entryName =
+      mode === "url"
+        ? prompt.split("/").pop() || "Repository"
+        : prompt.substring(0, 30) + "...";
+
+    const { error: insertError } = await supabase.from("history").insert([
       {
-        error:
-          "Failed to analyze input. Check your GitHub link, Token, or code.",
+        user_id: user.id,
+        name: entryName,
+        url: mode === "url" ? prompt : null,
+        result,
+      },
+    ]);
+
+    if (insertError) {
+      console.error("History insert error:", insertError);
+    }
+
+    return NextResponse.json({ result, provider });
+  } catch (error: any) {
+    console.error("Analysis Error:", error);
+    return NextResponse.json(
+      {
+        error: "Analysis failed",
+        details: error.message || String(error),
       },
       { status: 500 },
     );

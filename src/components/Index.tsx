@@ -1,10 +1,10 @@
 "use client";
+import { useEffect, useState } from "react";
+import { fetchHistory } from "../hooks/useFetch";
+import { analyzeRepository } from "../api/analyze";
 import HistoryAnalyze from "./SideBar/HistoryAnalyze";
 import { Analyze } from "./Analyze/Analyze";
 import ReviewResult from "./Result/ReviewResult";
-import { useEffect, useState } from "react";
-import { analyzeRepository } from "../api/analyze";
-import { fetchHistory } from "../hooks/useFetch";
 import { HistoryItem } from "../types/historyType";
 
 const Index = () => {
@@ -16,6 +16,7 @@ const Index = () => {
   const [list, setList] = useState<HistoryItem[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
+  const [openItemId, setOpenItemId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -56,9 +57,20 @@ const Index = () => {
     }
   };
 
+  const handleOpen = (id: number) => {
+    const selectedItem = list.find((item) => item.id === id);
+    if (selectedItem && selectedItem.result) {
+      setResult(selectedItem.result);
+      setOpenItemId(id);
+    } else {
+      console.error("Item not found or result is empty");
+    }
+  };
+
   return (
     <>
-      <HistoryAnalyze data={list} />
+      <HistoryAnalyze data={list} handleOpen={handleOpen} />
+      <ReviewResult result={result} key={openItemId ?? "default"} />
       <Analyze
         url={url}
         language={language}
@@ -74,7 +86,6 @@ const Index = () => {
           {error}
         </p>
       )}
-      <ReviewResult result={result} />
     </>
   );
 };

@@ -21,7 +21,6 @@ export async function runReview(systemPrompt: string, userContent: string) {
     console.error("Groq failed, falling back to Anthropic:", groqError);
   }
 
-  // Fallback: Anthropic
   try {
     const message = await anthropic.messages.create({
       model: "claude-sonnet-5",
